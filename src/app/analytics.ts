@@ -5,7 +5,7 @@
  * 既定の page_view は初回しか飛ばないので、URL が変わったときだけもう一度送る。
  */
 
-const MEASUREMENT_ID: string = "G-TQRNG44RDM";
+const MEASUREMENT_ID: string = "G-Y66C2KYCE6";
 
 declare global {
   interface Window {
