@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment / secrets
+.env
+.env.*
+
+# Data pipeline
+# e-Stat の Excel は sources.ts の URL から再取得できるため追跡しない。
+# 正規化 JSON（data/normalized）と配信用データ（public/data）は追跡する。
+data/raw/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Local capture artifacts
+.tmp-screenshots/
