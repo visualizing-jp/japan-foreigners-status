@@ -12,6 +12,7 @@ statInfId と形式は `src/lib/data/sources.ts`。
 - 2005年以前は表が画像の PDF しかないため扱わない。
 - 2020・2021年末は Excel がなく、閲覧用（fileKind 4）のファイルを取る。
 - 6月末の値は使わない（年末だけで揃える）。
+- 都道府県は2012年末から。2012–2020年は「都道府県別 国籍・地域別」と「都道府県別 在留資格別（総数）」。2021年末以降はテーブルデータ（性別・年齢を足す）。2006–2011年は外国人登録者で、短期滞在を県から引けない。
 
 ## 表の形
 
@@ -39,8 +40,8 @@ statInfId と形式は `src/lib/data/sources.ts`。
 
 ## パイプライン
 
-1. `fetch` — Excel を `data/raw/{year}.xls(x)` へ（追跡しない）
-2. `normalize` — 表を読み `data/normalized/tables.json` へ
+1. `fetch` — Excel を `data/raw/{year}.xls(x)` と都道府県の表へ（追跡しない）
+2. `normalize` — 表を読み `data/normalized/tables.json` と `places.json` へ
 3. `data` — 国籍・地域×年×在留資格の配列 `public/data/status.json` へ（型は `src/lib/data/cube.ts`）
 4. `verify` — 次を確かめる
    - 各国籍・地域の在留資格の和が総数に一致する
@@ -48,3 +49,4 @@ statInfId と形式は `src/lib/data/sources.ts`。
    - 2011年末以前は、除く区分を引いた総数が出入国在留管理庁の推移表の値に一致する
    - 2012年末以降は、除く区分の値がない
    - 国籍・地域名が重ならず、年が連続している
+   - 2012年末以降、都道府県の和に未定・不詳を足すと全国の総数と各在留資格に一致する

@@ -12,4 +12,11 @@ export interface StatusJson {
   statuses: Status[];
   names: string[];
   values: (number[] | null)[][];
+  /** 都道府県の表がある年（2012年末から）。 */
+  prefYears: number[];
+  prefectures: string[];
+  /** prefectures × prefYears × statuses。 */
+  byPrefecture: number[][][];
+  /** names × prefectures × prefYears。その年の国籍表に行がなければ null。0行目は県の総数。 */
+  nationPref: (number | null)[][][];
 }

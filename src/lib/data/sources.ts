@@ -48,8 +48,59 @@ export const DOCS: SourceDoc[] = [
   doc(2025, "000040472260"),
 ];
 
-export function docUrl(d: SourceDoc): string {
+export function docUrl(d: { statInfId: string; fileKind: 0 | 4 }): string {
   return `https://www.e-stat.go.jp/stat-search/file-download?statInfId=${d.statInfId}&fileKind=${d.fileKind}`;
+}
+
+/**
+ * 都道府県の表。2012年末から。2006–2011年は外国人登録者で、短期滞在を県から引けない。
+ * 2012–2020年は都道府県×国籍と都道府県×在留資格（総数）の2表。
+ * 2021年末以降はテーブルデータの明細（性別・年齢を足して同じ2表にする）。
+ */
+export type PlaceKind = "nation" | "status" | "cube";
+
+export interface PlaceDoc {
+  year: number;
+  kind: PlaceKind;
+  statInfId: string;
+  fileKind: 0 | 4;
+}
+
+const place = (year: number, kind: PlaceKind, statInfId: string, fileKind: 0 | 4 = 0): PlaceDoc => ({
+  year,
+  kind,
+  statInfId,
+  fileKind,
+});
+
+export const PLACE_DOCS: PlaceDoc[] = [
+  place(2012, "nation", "000021315232"),
+  place(2012, "status", "000021315233"),
+  place(2013, "nation", "000024395141"),
+  place(2013, "status", "000024395142"),
+  place(2014, "nation", "000029226529"),
+  place(2014, "status", "000029226530"),
+  place(2015, "nation", "000031399580"),
+  place(2015, "status", "000031399581"),
+  place(2016, "nation", "000031559330"),
+  place(2016, "status", "000031559331"),
+  place(2017, "nation", "000031669229"),
+  place(2017, "status", "000031669230"),
+  place(2018, "nation", "000031832814"),
+  place(2018, "status", "000031832815"),
+  place(2019, "nation", "000031964919"),
+  place(2019, "status", "000031964920"),
+  place(2020, "nation", "000032104295", 4),
+  place(2020, "status", "000032104296", 4),
+  place(2021, "cube", "000032213277"),
+  place(2022, "cube", "000040068664"),
+  place(2023, "cube", "000040186956"),
+  place(2024, "cube", "000040292372"),
+  place(2025, "cube", "000040472265"),
+];
+
+export function placeUrl(d: PlaceDoc): string {
+  return docUrl(d);
 }
 
 /**

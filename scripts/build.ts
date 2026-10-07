@@ -7,8 +7,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { StatusJson } from "../src/lib/data/cube.ts";
+import { PREFECTURES } from "../src/lib/data/labels.ts";
 import { STATUSES, TOTAL } from "../src/lib/data/sources.ts";
-import type { YearTable } from "../src/lib/parse/types.ts";
+import type { PlaceYear, YearTable } from "../src/lib/parse/types.ts";
 
 /** 国名の変更と表記の揺れ。同じ国を最新の表の名前に寄せる。 */
 const ALIASES: Record<string, string> = {
@@ -30,6 +31,9 @@ const ALIASES: Record<string, string> = {
 const tables = JSON.parse(
   await readFile(resolve(import.meta.dirname, "../data/normalized/tables.json"), "utf8"),
 ) as YearTable[];
+const places = JSON.parse(
+  await readFile(resolve(import.meta.dirname, "../data/normalized/places.json"), "utf8"),
+) as PlaceYear[];
 
 const nameOf = (raw: string) => ALIASES[raw] ?? raw;
 
@@ -50,12 +54,32 @@ tables.forEach((t, y) => {
   }
 });
 
+const prefYears = places.map((p) => p.year);
+const byPrefecture = PREFECTURES.map((pref) =>
+  places.map((p) => STATUSES.map((s) => p.statuses[pref]?.[s] ?? 0)),
+);
+const nationPref = names.map((name, n) =>
+  PREFECTURES.map((pref) =>
+    places.map((p) => {
+      if (n === 0) return p.totals[pref] ?? 0;
+      const row = p.nations[pref];
+      if (row === undefined) return null;
+      const value = Object.entries(row).reduce((acc, [raw, v]) => acc + (nameOf(raw) === name ? v : 0), 0);
+      return value > 0 || Object.keys(row).some((raw) => nameOf(raw) === name) ? value : null;
+    }),
+  ),
+);
+
 const out: StatusJson = {
   years: tables.map((t) => t.year),
   source: tables.map((t) => t.source),
   statuses: [...STATUSES],
   names,
   values,
+  prefYears,
+  prefectures: [...PREFECTURES],
+  byPrefecture,
+  nationPref,
 };
 
 const OUT = resolve(import.meta.dirname, "../public/data/status.json");

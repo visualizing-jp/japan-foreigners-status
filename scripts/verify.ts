@@ -11,8 +11,9 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { PREFECTURES } from "../src/lib/data/labels.ts";
 import { EXCLUDED, STATUSES } from "../src/lib/data/sources.ts";
-import type { YearTable } from "../src/lib/parse/types.ts";
+import type { PlaceYear, YearTable } from "../src/lib/parse/types.ts";
 
 /**
  * 出入国在留管理庁「令和7年末現在における在留外国人数について」第1表。
@@ -61,6 +62,27 @@ for (const t of tables) {
 
 const years = tables.map((t) => t.year);
 expect(years.every((y, i) => i === 0 || y === years[i - 1]! + 1), `年が連続しない: ${years.join(",")}`);
+
+const places = JSON.parse(
+  await readFile(resolve(import.meta.dirname, "../data/normalized/places.json"), "utf8"),
+) as PlaceYear[];
+const byYear = new Map(tables.map((t) => [t.year, t]));
+for (const p of places) {
+  const national = byYear.get(p.year);
+  expect(national !== undefined, `${p.year}: 全国の表がない`);
+  if (national === undefined) continue;
+  for (const name of PREFECTURES) {
+    expect(p.totals[name] !== undefined && p.totals[name]! > 0, `${p.year}: ${name} がない`);
+  }
+  const prefTotal = PREFECTURES.reduce((a, name) => a + (p.totals[name] ?? 0), 0) + p.unknown;
+  const nationalTotal = national.rows[0]!.total;
+  expect(prefTotal === nationalTotal, `${p.year}: 都道府県＋未定・不詳 ${prefTotal} ≠ 全国 ${nationalTotal}`);
+  for (const s of STATUSES) {
+    const fromPlaces = PREFECTURES.reduce((a, name) => a + (p.statuses[name]?.[s] ?? 0), 0) + (p.unknownStatuses[s] ?? 0);
+    const fromNation = national.rows[0]!.values[s] ?? 0;
+    expect(fromPlaces === fromNation, `${p.year} ${s}: 都道府県＋未定・不詳 ${fromPlaces} ≠ 全国 ${fromNation}`);
+  }
+}
 
 if (errors.length > 0) {
   console.error(errors.join("\n"));

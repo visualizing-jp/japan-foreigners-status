@@ -8,7 +8,7 @@
 
 import { mkdir, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { DOCS, docUrl, type SourceDoc } from "../src/lib/data/sources.ts";
+import { DOCS, PLACE_DOCS, docUrl, placeUrl, type PlaceDoc, type SourceDoc } from "../src/lib/data/sources.ts";
 
 const RAW_DIR = resolve(import.meta.dirname, "../data/raw");
 
@@ -17,6 +17,18 @@ const SIGNATURES = { xlsx: "504b0304", xls: "d0cf11e0" } as const;
 
 export function rawPath(doc: SourceDoc): string {
   return resolve(RAW_DIR, `${doc.year}.${doc.source === "registry" ? "xls" : "xlsx"}`);
+}
+
+export function placePath(doc: PlaceDoc, ext: "xls" | "xlsx" = "xlsx"): string {
+  return resolve(RAW_DIR, `${doc.year}-pref-${doc.kind}.${ext}`);
+}
+
+export async function existingPlacePath(doc: PlaceDoc): Promise<string> {
+  for (const ext of ["xlsx", "xls"] as const) {
+    const path = placePath(doc, ext);
+    if (await exists(path)) return path;
+  }
+  throw new Error(`${doc.year} ${doc.kind}: 落としたファイルがない`);
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -40,6 +52,21 @@ async function main(): Promise<void> {
     const body = Buffer.from(await res.arrayBuffer());
     const head = body.subarray(0, 4).toString("hex");
     if (!Object.values(SIGNATURES).includes(head as never)) throw new Error(`${doc.year}: Excel でない応答 ${url}`);
+    await writeFile(path, body);
+    console.log(`  ${path.split("/").at(-1)}  ${url}`);
+  }
+  for (const doc of PLACE_DOCS) {
+    const xlsx = placePath(doc, "xlsx");
+    const xls = placePath(doc, "xls");
+    if (!force && ((await exists(xlsx)) || (await exists(xls)))) continue;
+    const url = placeUrl(doc);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${doc.year} ${doc.kind}: ${res.status} ${url}`);
+    const body = Buffer.from(await res.arrayBuffer());
+    const head = body.subarray(0, 4).toString("hex");
+    const ext = head === SIGNATURES.xlsx ? "xlsx" : head === SIGNATURES.xls ? "xls" : null;
+    if (ext === null) throw new Error(`${doc.year} ${doc.kind}: Excel でない応答 ${url}`);
+    const path = placePath(doc, ext);
     await writeFile(path, body);
     console.log(`  ${path.split("/").at(-1)}  ${url}`);
   }

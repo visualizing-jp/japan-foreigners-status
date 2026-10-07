@@ -35,3 +35,17 @@ export function lastOf(d: StatusJson, key: string): number | undefined {
 export function nationSince(d: StatusJson): number {
   return d.years[Math.min(...["韓国", "朝鮮"].map((name) => d.values[d.names.indexOf(name)]!.findIndex((v) => v !== null)))]!;
 }
+
+export function prefYearIndex(d: StatusJson, year: number): number {
+  return d.prefYears.indexOf(year);
+}
+
+export function prefValueOf(d: StatusJson, p: number, py: number, key?: string): number {
+  const row = d.byPrefecture[p]![py]!;
+  if (key === undefined) return row.reduce((a, b) => a + b, 0);
+  return statusesOf(key).reduce((a, s) => a + row[d.statuses.indexOf(s)]!, 0);
+}
+
+export function nationPrefOf(d: StatusJson, n: number, p: number, py: number): number | null {
+  return d.nationPref[n]![p]![py] ?? null;
+}

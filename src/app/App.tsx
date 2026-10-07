@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { EraView } from "./views/EraView.tsx";
 import { MarketsView } from "./views/MarketsView.tsx";
+import { PlacesView } from "./views/PlacesView.tsx";
 import { StatusView } from "./views/StatusView.tsx";
 import { useUrlState } from "./hooks/useUrlState.ts";
 import { SeriesBar, SeriesFooter } from "./components/Brand.tsx";
@@ -9,6 +10,7 @@ const VIEWS = [
   { id: "era", label: "時代", hint: "2006–" },
   { id: "markets", label: "国・地域", hint: "2006–" },
   { id: "status", label: "在留資格", hint: "2006–" },
+  { id: "places", label: "都道府県", hint: "2012–" },
 ] as const;
 
 type ViewId = (typeof VIEWS)[number]["id"];
@@ -48,12 +50,14 @@ export function App() {
         {view === "era" && <EraView />}
         {view === "markets" && <MarketsView />}
         {view === "status" && <StatusView />}
+        {view === "places" && <PlacesView />}
       </Suspense>
 
       <footer className="mx-auto w-full max-w-[1240px] px-6 pt-2 pb-10 text-[11px] leading-relaxed text-faint">
         出典: 出入国在留管理庁「在留外国人統計（旧登録外国人統計）」（e-Stat）の各年末の「国籍・地域別 在留資格（在留目的）別 在留外国人」と、2011年末までの「国籍（出身地）別 在留資格（在留目的）別 外国人登録者」。
+        都道府県は2012年末から（2012–2020年は都道府県別の表、2021年末以降はテーブルデータ）。
         在留外国人は中長期在留者と特別永住者で、短期滞在の人を含まない。2011年末までは外国人登録者から数え直した参考値（「時代」の注を参照）。
-        各年の表は、国籍・地域の和と在留資格の和が総数に一致することを確かめている。
+        各年の表は、国籍・地域の和と在留資格の和が総数に一致することを確かめている。都道府県の和に未定・不詳を足すと全国と一致する。
         <SeriesFooter />
       </footer>
     </div>

@@ -9,7 +9,7 @@ import { use, useMemo } from "react";
 import { GROUPS } from "../../lib/data/groups.ts";
 import { loadStatus } from "../data/load.ts";
 import { GROUP_COLORS, PICK_COLOR, RANK_COLORS, REST_COLOR } from "../data/colors.ts";
-import { nationSince, valueOf } from "../data/derive.ts";
+import { nationPrefOf, nationSince, prefYearIndex, valueOf } from "../data/derive.ts";
 import { exact, pct, people } from "../data/format.ts";
 import { RankList, type RankRow } from "../components/RankList.tsx";
 import { Segmented } from "../components/Segmented.tsx";
@@ -123,7 +123,7 @@ export function MarketsView() {
           noneValue={people(total)}
         />
         <p className="mt-2 border-t border-rule px-2 pt-2 text-[10.5px] leading-relaxed text-faint">
-          国・地域を選ぶとグラフでその国だけを濃くし、下にその国の在留資格の構成を出す。同じ国をもう一度押すか「総数」で解除。
+          国・地域を選ぶとグラフでその国だけを濃くし、下にその国がいる都道府県と在留資格の構成を出す。同じ国をもう一度押すか「総数」で解除。
         </p>
       </aside>
 
@@ -181,6 +181,39 @@ export function MarketsView() {
             { name: REST, color: REST_COLOR },
           ]}
         />
+
+        {pickIndex > 0 && prefYearIndex(d, year) >= 0 && (
+          <section className="mt-8">
+            <h2 className="pb-2 text-[13px] font-semibold">「{focusName}」がいる都道府県</h2>
+            <Years
+              columns={d.prefYears.flatMap((yr, k) => {
+                const ranked = d.prefectures
+                  .map((name, i) => ({ name, value: nationPrefOf(d, pickIndex, i, k) ?? 0 }))
+                  .sort((a, b) => b.value - a.value);
+                const shown = ranked.slice(0, TOP);
+                const rest = ranked.slice(TOP).reduce((a, r) => a + r.value, 0);
+                const t = shown.reduce((a, r) => a + r.value, 0) + rest;
+                if (t === 0) return [];
+                return [
+                  {
+                    year: yr,
+                    total: t,
+                    segments: [
+                      ...shown.map((r, i) => ({ key: r.name, value: r.value, color: RANK_COLORS[i]! })),
+                      { key: REST, value: rest, color: REST_COLOR },
+                    ],
+                  },
+                ];
+              })}
+              measure="share"
+              highlighted=""
+              focused={year}
+              onFocus={(y) => setYearParam(String(y))}
+              height={220}
+              label={`「${focusName}」の都道府県別の構成比`}
+            />
+          </section>
+        )}
 
         <section className="mt-8">
           <h2 className="pb-2 text-[13px] font-semibold">{focusName}の在留資格の構成</h2>

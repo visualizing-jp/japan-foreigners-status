@@ -13,3 +13,14 @@ export interface YearTable {
   source: Source;
   rows: NationRow[];
 }
+
+/** 2012年末からの都道府県。statuses と nations は県ごとの周辺。 */
+export interface PlaceYear {
+  year: number;
+  totals: Record<string, number>;
+  statuses: Record<string, Partial<Record<Status, number>>>;
+  nations: Record<string, Record<string, number>>;
+  /** 都道府県が未定・不詳の人数。全国との差。 */
+  unknown: number;
+  unknownStatuses: Partial<Record<Status, number>>;
+}
